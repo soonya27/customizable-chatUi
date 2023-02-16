@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">
+    <link rel="stylesheet" href="chat.css">
+</head>
+
+<body>
+
+
+    <div id="wrap">
+        <div id="content" class="chat-page">
+            <article class="chat-wrap">
+                <div class="inner" id="chatInner">
+                    <div class="last-date">
+                        <span>2023년 02월 07일</span>
+                    </div>
+                    <div id="chatWrap" class="balloon-wrap">
+                        <div class="my-talk" value="" data-date="">
+                            <div class="speech-balloon">
+                                <ul>
+                                    <li>
+                                        <p>ㅇㄹㅇㄹ</p>
+                                        <span class="date">2022.00</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="other-talk" value="" data-date="">
+                            <div class="profile-img">
+                                <img src="" alt="">
+                            </div>
+                            <div class="balloon-wrap">
+                                <strong class="name"> 이름</strong>
+                                <div class="speech-balloon">
+                                    <ul>
+                                        <li>
+                                            <p>내용</p>
+                                            파일
+                                            <span class="date">시간</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="other-talk" value="" data-date="">
+                            <div class="profile-img">
+                                <img src="" alt="">
+                            </div>
+                            <div class="balloon-wrap">
+                                <strong class="name"> 이름</strong>
+                                <div class="speech-balloon">
+                                    <ul>
+                                        <li>
+                                            <p>내용</p>
+                                            파일
+                                            <span class="date">시간</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="other-talk" value="" data-date="">
+                            <div class="profile-img">
+                                <img src="" alt="">
+                            </div>
+                            <div class="balloon-wrap">
+                                <strong class="name"> 이름</strong>
+                                <div class="speech-balloon">
+                                    <ul>
+                                        <li>
+                                            <p>내용</p>
+                                            파일
+                                            <span class="date">시간</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="text-input">
+                    <form id="chatFormData" name="formData" method="post" style="width: 100%" onsubmit="return false">
+                        <div class="inner">
+                            <div class="file-btn-wrap">
+                                <label for="fileUpload" class="attach"></label> <input type="file" class="file-btn" accept="image/*" id="fileUpload" name="" style="display: none">
+                            </div>
+                            <div class="text-box chat-box">
+                                <input placeholder="문의사항을 적으세요." type="text" name="content" id="messageContent">
+                                <p class="send-btn" id="sendBtn"></p>
+                            </div>
+                        </div>
+                    </form>
+            </article>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+
+        let BID = 0;
+        let timer_interval = '';
+        let delay = 500;
+        function addConsulting(consultingBid, comid) {
+            BID = consultingBid;
+            let last = 0;
+
+            //reset
+            $('#chatWrap').empty();
+            $('#chatFormData')[0].reset();
+
+
+            //	 	console.log('실행')
+            comAjax.requestAsyncJson("get", "/bizConsulting/service/comment?bid=" + BID, { comid }, "json", function (data) {
+                // 	 		console.log(data);
+
+                var lastDate = '';
+                var today = new Date();
+                var lastCid = '';
+
+                $('#chatTitle').text(data.result.company);
+
+                data.result.list.forEach(function (item) {
+                    //지난 날짜  표시
+                    let LastDateHtml = '';
+                    // 	 			console.log(lastDate);
+                    if (lastDate != formatDate(item.pdate)) {
+                        LastDateHtml = ` <div class="last-date">
+                                            <span>${'${formatDate(item.pdate, 1)}'}</span>
+                                        </div> `
+                    } else {
+                        LastDateHtml = '';
+                    }
+                    //파일 유무
+                    let file = '';
+                    if (item.file_path != null) {
+                        file = `<img src="${'${item.file_path}'}">`
+                    }
+
+                    //link 걸기
+                    // 				let filteredContent = urlFromText(replaceEnter(item.content));
+
+                    //my 1 = 내메세지 , 2 상대방
+                    if (item.my == 1) {
+                        myMessage = ` <div class="my-talk" data-date="${'${formatDate(item.pdate)}'}" data-cid="${'${item.cid}'}">
+                                            <div class="speech-balloon">
+                                                <ul>
+                                                    <li><p>${'${item.content}'}</p>${'${file}'}
+                                                    <span class="date">${'${strTime(item.pdate)}'}</span></li>
+                                                </ul>
+                                            </div>
+                                        </div> `
+                        $('#chatWrap').append(LastDateHtml);
+                        $('#chatWrap').append(myMessage);
+                    } else {
+                        pharmaMessage = ` <div class="other-talk" data-date="${'${formatDate(item.pdate)}'}"  data-cid="${'${item.cid}'}">
+                                            <div class="balloon-wrap">
+                                                <strong class="name">${'${item.manager}'}</strong>
+                                                <div class="speech-balloon">
+                                                    <ul>
+                                                        <li><p>${'${item.content}'}</p>
+                                                            ${'${file}'}
+                                                            <span class="date">${'${strTime(item.pdate)}'}</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div> `
+                        $('#chatWrap').append(LastDateHtml);
+                        $('#chatWrap').append(pharmaMessage);
+
+                    }
+                    lastDate = formatDate(item.pdate);
+                    lastCid = item.cid;
+
+                    $('#chatInner').scrollTop();
+                });
+
+            });
+            timer();
+
+            //타이머
+            timer_interval = setInterval(timerAddConsulting, 3000);
+        }//addConsulting
+
+
+
+        //추가로 가져올 대화
+        function timerAddConsulting() {
+            //마지막 메세지의 lastCid값 가져오기
+            last = $('#chatWrap > div:last-of-type').data('cid');
+            if (!last) {
+                last = 0;
+            }
+
+            comAjax.requestAsyncJson("get", "/bizConsulting/service/comment/history", { cid: last, bid: BID }, "json", function (data) {
+                // 	 		console.log(data);
+
+                var lastDateDay = $('#chatWrap > div:last-of-type').data('date');
+                var today = new Date();
+                var lastCid = '';
+
+                $('#chatTitle').text(data.result.company);
+
+                data.result.forEach(function (item) {
+
+                    //지난 날짜  표시
+                    let LastDateHtml = '';
+                    //	 			console.log(lastDate)
+                    if (lastDateDay != formatDate(item.pdate)) {
+                        LastDateHtml = ` <div class="last-date">
+                                            <span>${'${formatDate(item.pdate, 1)}'}</span>
+                                        </div> `
+                    } else {
+                        LastDateHtml = '';
+                    }
+                    //파일 유무
+                    let file = '';
+                    if (item.file_path != null) {
+                        file = `<img src="${'${item.file_path}'}">`
+                    }
+
+                    //link 걸기
+                    // 				let filteredContent = urlFromText(replaceEnter(item.content));
+
+                    //my 1 = 내메세지 , 2 상대방
+                    if (item.my == 1) {
+                        myMessage = ` <div class="my-talk" data-date="${'${formatDate(item.pdate)}'}"  data-cid="${'${item.cid}'}">
+                                            <div class="speech-balloon">
+                                                <ul>
+                                                    <li><p>${'${item.content}'}</p>${'${file}'}
+                                                    <span class="date">${'${strTime(item.pdate)}'}</span></li>
+                                                </ul>
+                                            </div>
+                                        </div> `
+                        $('#chatWrap').append(LastDateHtml);
+                        $('#chatWrap').append(myMessage);
+                    } else {
+                        pharmaMessage = ` <div class="other-talk" data-date="${'${formatDate(item.pdate)}'}"  data-cid="${'${item.cid}'}">
+                                            <div class="balloon-wrap">
+                                                <strong class="name">${'${item.manager}'}</strong>
+                                                <div class="speech-balloon">
+                                                    <ul>
+                                                        <li><p>${'${item.content}'}</p>
+                                                            ${'${file}'}
+                                                            <span class="date">${'${strTime(item.pdate)}'}</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div> `
+                        $('#chatWrap').append(LastDateHtml);
+                        $('#chatWrap').append(pharmaMessage);
+
+                    }
+                    lastDate = formatDate(item.pdate);
+                    lastCid = item.cid;
+                });
+            });
+        }//timerAddConsulting
+
+
+
+
+        //전송
+        $(document).on('click', '.chat-page #sendBtn', function () {
+            sendConsulting();
+            $('#messageContent').val('');
+        });
+        $(document).on('keypress', '#messageContent', function (e) {
+            if (e.keyCode === 13) {
+                sendConsulting();
+                $('#messageContent').val('');
+            }
+        });
+
+        //파일업로드
+        $("#fileUpload").change(function (e) {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.readAsDataURL(this.files[0]);
+                //사진만 보내기
+                var formData = new FormData();
+                formData.append("file", this.files[0]);
+                formData.append("content", '');
+                formData.append("bid", BID);
+
+
+                // 			for (let value of formData.values()) {
+                // 		 	      console.log(value);
+                // 		 	}
+
+                comAjax.requestAsyncForm("POST", "/bizConsulting/service/comment", formData, 'json', function (data) {
+                    timerAddConsulting();
+                })
+                timer();
+            }
+            $("#fileUpload").val("");
+
+        });
+
+
+
+        function sendConsulting() {
+            //내용여부
+            const content = $('#messageContent').val();
+            if (content == null || content == '') {
+                modal.showAlertModal({
+                    doWhat: 'done',
+                    header: '',
+                    title: '내용을 입력해주세요.',
+                    btn: {
+                        confirm: {
+                            text: '확인'
+                        }
+                    },
+                });
+                return;
+            }
+            var formData = new FormData();
+            formData.append('bid', BID);
+            formData.append('content', content);
+
+
+            // 	 	for (let value of formData.values()) {
+            // 	 	      console.log(value);
+            // 	 	}
+
+            // 		const formData = {
+            // 				bid : BID,
+            // 				content
+            // 		}
+
+            // 		console.log(formData);
+            comAjax.requestAsyncForm("POST", "/bizConsulting/service/comment", formData, 'json', function (data) {
+                timerAddConsulting();
+                $('#messageContent').val('');
+                timer();
+            });
+
+        }//sendConsulting
+
+
+
+
+        //스크롤탑 로딩
+        function timer() {
+            let scrollTimer = setTimeout(scrollTimeout, delay);
+        }
+        function scrollTimeout() {
+            $('.chat-page .chat-wrap').scrollTop($('#chatWrap').height());
+        }
+    </script>
+</body>
+
+</html>
